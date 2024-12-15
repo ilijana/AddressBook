@@ -1,7 +1,7 @@
 package com.example.AddressBook.controller;
 
 import com.example.AddressBook.model.Contact;
-import com.example.AddressBook.model.UserEmails;
+import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.repository.ContactRepository;
 import io.micrometer.common.util.StringUtils;
 import java.util.List;
@@ -31,43 +31,42 @@ public class ContactController {
       @RequestParam(value = "gender", required = false) String genderRequest) {
 
     // Use a switch expression to determine which search method to call
-    switch (getNonNullParameter(nameRequest, surnameRequest, genderRequest)) {
-      case "name":
-        return contactRepository.searchContactsByParameter("name", nameRequest);
-      case "surname":
-        return contactRepository.searchContactsByParameter("surname", surnameRequest);
-      case "gender":
-        return contactRepository.searchContactsByParameter("gender", genderRequest);
-      default:
-        return contactRepository.getAllContacts();
-    }
+      return switch (getNonNullParameter(nameRequest, surnameRequest, genderRequest)) {
+          case "name" -> contactRepository.searchContactsByParameter("name", nameRequest);
+          case "surname" -> contactRepository.searchContactsByParameter("surname", surnameRequest);
+          case "gender" -> contactRepository.searchContactsByParameter("gender", genderRequest);
+          default -> contactRepository.getAllContacts();
+      };
   }
 
   // Helper method to identify which parameter is non-null
   private String getNonNullParameter(String name, String surname, String gender) {
-    if (StringUtils.isNotBlank(name)) {
-      return "name";
-    } else if (surname != null && !surname.isEmpty()) {
-      return "surname";
-    } else if (gender != null && !gender.isEmpty()) {
-      return "gender";
-    } else {
-      return "default";
-    }
+      String parameter = null;
+      if (StringUtils.isNotBlank(name)) {
+        parameter = "name";
+      } else if (StringUtils.isNotBlank(surname)) {
+        parameter = "surname";
+      } else if (StringUtils.isNotBlank(gender)) {
+        parameter = "gender";
+      }
+
+      return parameter;
   }
 
   // Create contact using body
   @PostMapping("/contacts/create-using-body")
-  public String createContactUsingBody(@RequestBody Contact contactRequest) {
-    contactRepository.createContact(
-        contactRequest.getPin(),
-        contactRequest.getName(),
-        contactRequest.getSurname(),
-        contactRequest.getGender(),
-        contactRequest.getPhones(),
-        contactRequest.getEmails());
+  public String createContactsUsingBody(@RequestBody List<Contact> contactsRequest) {
+      for(Contact contact : contactsRequest) {
+          contactRepository.createContact(
+                  contact.getPin(),
+                  contact.getName(),
+                  contact.getSurname(),
+                  contact.getGender(),
+                  contact.getPhones(),
+                  contact.getEmails());
+      }
 
-    return "Contact created successfully.";
+    return "Contacts created successfully.";
   }
 
   // Create contact using query parameters (URL)
@@ -78,10 +77,10 @@ public class ContactController {
       @RequestParam("surname") String surname,
       @RequestParam(value = "gender", required = false) String gender, // Optional gender
       @RequestParam(value = "phone", required = false) List<String> phones,
-      @RequestParam(value = "email", required = false) UserEmails emails) {
+      @RequestParam(value = "email", required = false) ContactEmails emails) {
 
     // Call repository to insert the contact with phone numbers and emails
-    contactRepository.createContact(pin, name, surname, gender, phones, emails);
+      contactRepository.createContact(pin, name, surname, gender, phones, emails);
 
     return "Contact created successfully.";
   }

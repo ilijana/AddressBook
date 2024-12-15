@@ -1,7 +1,7 @@
 package com.example.AddressBook.repository;
 
 import com.example.AddressBook.model.Contact;
-import com.example.AddressBook.model.UserEmails;
+import com.example.AddressBook.model.ContactEmails;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class JdbcContactRepository implements ContactRepository {
     String sql =
         "SELECT "
             + "c.pin, c.name, c.surname, c.gender, "
-            + "STRING_AGG(DISTINCT pn.phone, ', ') AS phone_numbers, "
+            + "STRING_AGG(DISTINCT pn.phone, ', ') AS phones, "
             + "STRING_AGG(DISTINCT e.email, ', ') AS emails "
             + "FROM contacts c "
             + "LEFT JOIN phonenumbers pn ON c.pin = pn.pin "
@@ -65,7 +65,7 @@ public class JdbcContactRepository implements ContactRepository {
             + "c.name, "
             + "c.surname, "
             + "c.gender, "
-            + "STRING_AGG(DISTINCT pn.phone, ', ') AS phone_numbers, "
+            + "STRING_AGG(DISTINCT pn.phone, ', ') AS phones, "
             + "STRING_AGG(DISTINCT e.email, ', ') AS emails "
             + "FROM contacts c "
             + "LEFT JOIN phonenumbers pn ON c.pin = pn.pin "
@@ -84,7 +84,7 @@ public class JdbcContactRepository implements ContactRepository {
       String surname,
       String gender,
       List<String> phoneNumbers,
-      UserEmails emails) {
+      ContactEmails emails) {
 
     // Insert into contacts table
     if (gender != null) {

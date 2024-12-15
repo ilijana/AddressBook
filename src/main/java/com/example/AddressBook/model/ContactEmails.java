@@ -2,4 +2,4 @@ package com.example.AddressBook.model;
 
 import java.util.ArrayList;
 
-public class UserEmails extends ArrayList<String> {}
+public class ContactEmails extends ArrayList<String> {}

@@ -1,7 +1,7 @@
 package com.example.AddressBook.repository;
 
 import com.example.AddressBook.model.Contact;
-import com.example.AddressBook.model.UserEmails;
+import com.example.AddressBook.model.ContactEmails;
 import java.util.List;
 
 public interface ContactRepository {
@@ -18,7 +18,7 @@ public interface ContactRepository {
       String surname,
       String gender,
       List<String> phoneNumbers,
-      UserEmails emails);
+      ContactEmails emails);
 
   void deleteContactByPin(int pin);
 }

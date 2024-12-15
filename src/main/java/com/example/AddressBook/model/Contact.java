@@ -9,8 +9,8 @@ public class Contact {
   private String name;
   private String surname;
   private String gender;
-  private UserEmails emails; // List of emails as a single string
-  private List<String> phones; // List of phone numbers as a single string
+  private ContactEmails emails;
+  private ContactPhones phones;
 
   public Contact() {}
 

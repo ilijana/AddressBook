@@ -1,10 +1,12 @@
 package com.example.AddressBook.repository;
 
 import com.example.AddressBook.model.Contact;
-import com.example.AddressBook.model.UserEmails;
+import com.example.AddressBook.model.ContactEmails;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+
+import com.example.AddressBook.model.ContactPhones;
 import org.springframework.jdbc.core.RowMapper;
 
 public class ContactRowMapper implements RowMapper<Contact> {
@@ -17,11 +19,11 @@ public class ContactRowMapper implements RowMapper<Contact> {
     contact.setSurname(rs.getString("surname"));
     contact.setGender(rs.getString("gender"));
 
-    // Set the phones (assuming there's only one phone per row)
-    contact.setPhones(Collections.singletonList(rs.getString("phone_numbers")));
+    ContactPhones phones = new ContactPhones();
+    phones.add(rs.getString("phones"));
+    contact.setPhones(phones);
 
-    // Set the emails (assuming there's only one email per row)
-    UserEmails emails = new UserEmails();
+    ContactEmails emails = new ContactEmails();
     emails.add(rs.getString("emails"));
     contact.setEmails(emails);
 
