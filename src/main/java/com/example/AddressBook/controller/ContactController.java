@@ -2,8 +2,9 @@ package com.example.AddressBook.controller;
 
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
+import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.repository.ContactRepository;
-import io.micrometer.common.util.StringUtils;
+
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,47 +17,43 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class ContactController {
 
-  private static final Logger log = LoggerFactory.getLogger(ContactController.class);
-  @Autowired ContactRepository contactRepository;
+    private static final Logger log = LoggerFactory.getLogger(ContactController.class);
 
-  @GetMapping("/contacts/{pin}")
-  public Contact getContactByPin(@PathVariable int pin) {
-    return contactRepository.getContactByPin(pin);
-  }
+    @Autowired
+    ContactRepository contactRepository;
+    ControllerHelper controllerHelper = new ControllerHelper();
 
-  @GetMapping("/contacts")
-  public List<Contact> searchContacts(
-      @RequestParam(value = "name", required = false) String nameRequest,
-      @RequestParam(value = "surname", required = false) String surnameRequest,
-      @RequestParam(value = "gender", required = false) String genderRequest) {
+    @GetMapping("/contacts/findContact/{pin}")
+    public Contact getContactByPin(@PathVariable int pin) {
+        return contactRepository.getContactByPin(pin);
+    }
 
-    // Use a switch expression to determine which search method to call
-      return switch (getNonNullParameter(nameRequest, surnameRequest, genderRequest)) {
-          case "name" -> contactRepository.searchContactsByParameter("name", nameRequest);
-          case "surname" -> contactRepository.searchContactsByParameter("surname", surnameRequest);
-          case "gender" -> contactRepository.searchContactsByParameter("gender", genderRequest);
-          default -> contactRepository.getAllContacts();
-      };
-  }
+    @GetMapping("/contacts/findContact")
+    public List<Contact> searchContacts(
+            @RequestParam(value = "name", required = false) String nameRequest,
+            @RequestParam(value = "surname", required = false) String surnameRequest,
+            @RequestParam(value = "gender", required = false) String genderRequest) {
 
-  // Helper method to identify which parameter is non-null
-  private String getNonNullParameter(String name, String surname, String gender) {
-      String parameter = null;
-      if (StringUtils.isNotBlank(name)) {
-        parameter = "name";
-      } else if (StringUtils.isNotBlank(surname)) {
-        parameter = "surname";
-      } else if (StringUtils.isNotBlank(gender)) {
-        parameter = "gender";
-      }
+        if (controllerHelper.checkIfRequestParamIsSet(nameRequest, surnameRequest, genderRequest)) {
+            return contactRepository.searchContactsByParameter(nameRequest, surnameRequest, genderRequest);
+        } else {
+            return contactRepository.getAllContacts();
+        }
+    }
 
-      return parameter;
-  }
+    @GetMapping("/contacts/findContacts")
+    public List<Contact> getContactByPin() {
+        return contactRepository.getAllContacts();
+    }
 
-  // Create contact using body
-  @PostMapping("/contacts/create-using-body")
+
+  // Create contact using JSON body
+  @PostMapping("/contacts/createContactFromJson")
   public String createContactsUsingBody(@RequestBody List<Contact> contactsRequest) {
       for(Contact contact : contactsRequest) {
+          if (contact.getGender() != null && !controllerHelper.isValidGender(contact.getGender())) {
+              return "Provided gender is not valid!";
+          }
           contactRepository.createContact(
                   contact.getPin(),
                   contact.getName(),
@@ -70,15 +67,18 @@ public class ContactController {
   }
 
   // Create contact using query parameters (URL)
-  @PostMapping("/contacts/create-using-url")
+  @PostMapping("/contacts/createContact")
   public String createContactUsingUrlParams(
       @RequestParam("pin") int pin,
       @RequestParam("name") String name,
       @RequestParam("surname") String surname,
       @RequestParam(value = "gender", required = false) String gender, // Optional gender
-      @RequestParam(value = "phone", required = false) List<String> phones,
+      @RequestParam(value = "phone", required = false) ContactPhones phones,
       @RequestParam(value = "email", required = false) ContactEmails emails) {
 
+      if (gender != null && !controllerHelper.isValidGender(gender)) {
+          return "Provided gender is not valid!";
+      }
     // Call repository to insert the contact with phone numbers and emails
       contactRepository.createContact(pin, name, surname, gender, phones, emails);
 
@@ -94,4 +94,29 @@ public class ContactController {
     // Return a response indicating successful deletion
     return ResponseEntity.ok("Contact with pin " + pin + " has been deleted successfully.");
   }
+
+  @PutMapping("/contacts/updateContact/{pin}")
+  public String updateContact(@PathVariable int pin,
+                              @RequestBody Contact updateRequest) {
+      if (updateRequest.getGender() != null && !controllerHelper.isValidGender(updateRequest.getGender())) {
+        return "Provided gender is not valid!";
+      }
+      Contact currentContact = contactRepository.getContactByPin(pin);
+      Contact updatedContact = controllerHelper.updateContact(currentContact, updateRequest);
+      contactRepository.updateContactDetails(updatedContact);
+      return "Contact updated successfully!";
+  }
+
+    @DeleteMapping("/contacts/deleteEmail")
+    public String deleteEmail(@RequestParam int pin, @RequestParam String email) {
+        contactRepository.deleteEmail(pin, email);
+        return "Email deleted successfully.";
+    }
+
+    @DeleteMapping("/contacts/deletePhone")
+    public String deletePhone(@RequestParam int pin, @RequestParam String phone) {
+        contactRepository.deletePhone(pin, phone);
+        return "Phone deleted successfully.";
+    }
+
 }
