@@ -32,7 +32,7 @@ public class JdbcContactRepository implements ContactRepository {
             + "STRING_AGG(DISTINCT p.phone, ', ') AS phones, "
             + "STRING_AGG(DISTINCT e.email, ', ') AS emails "
             + "FROM contacts c "
-            + "LEFT JOIN phonenumbers p ON c.pin = p.pin "
+            + "LEFT JOIN phones p ON c.pin = p.pin "
             + "LEFT JOIN emails e ON c.pin = e.pin "
             + "GROUP BY c.pin, c.name, c.surname, c.gender";
 
@@ -47,7 +47,7 @@ public class JdbcContactRepository implements ContactRepository {
             + "STRING_AGG(DISTINCT pn.phone, ', ') AS phones, "
             + "STRING_AGG(DISTINCT e.email, ', ') AS emails "
             + "FROM contacts c "
-            + "LEFT JOIN phonenumbers pn ON c.pin = pn.pin "
+            + "LEFT JOIN phones pn ON c.pin = pn.pin "
             + "LEFT JOIN emails e ON c.pin = e.pin "
             + "WHERE c.pin = ? "
             + "GROUP BY c.pin, c.name, c.surname, c.gender";
@@ -71,7 +71,7 @@ public class JdbcContactRepository implements ContactRepository {
             + "STRING_AGG(DISTINCT pn.phone, ', ') AS phones, "
             + "STRING_AGG(DISTINCT e.email, ', ') AS emails "
             + "FROM contacts c "
-            + "LEFT JOIN phonenumbers pn ON c.pin = pn.pin "
+            + "LEFT JOIN phones pn ON c.pin = pn.pin "
             + "LEFT JOIN emails e ON c.pin = e.pin "
             + "WHERE "
             + sqlMultipleSearch
@@ -86,7 +86,7 @@ public class JdbcContactRepository implements ContactRepository {
       String name,
       String surname,
       String gender,
-      ContactPhones phoneNumbers,
+      ContactPhones phones,
       ContactEmails emails) {
 
     // Insert into contacts table
@@ -100,10 +100,10 @@ public class JdbcContactRepository implements ContactRepository {
       jdbcTemplate.update(sqlContact, pin, name, surname);
     }
 
-    // Insert phone numbers into phonenumbers table
-    String sqlPhone = "INSERT INTO phonenumbers (phone, pin) VALUES (?, ?)";
-    if (phoneNumbers != null) {
-      for (String phone : phoneNumbers) {
+    // Insert phone numbers into phones table
+    String sqlPhone = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
+    if (phones != null) {
+      for (String phone : phones) {
         jdbcTemplate.update(sqlPhone, phone, pin);
       }
     }
@@ -132,7 +132,7 @@ public class JdbcContactRepository implements ContactRepository {
         updatedContact.getSurname(),
         updatedContact.getGender());
     updateEmails(updatedContact.getPin(), updatedContact.getEmails());
-    updatePhoneNumbers(updatedContact.getPin(), updatedContact.getPhones());
+    updatephones(updatedContact.getPin(), updatedContact.getPhones());
   }
 
   // Update contact details (name, surname, gender).
@@ -156,13 +156,13 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   // Update phone numbers for a given contact (delete old, insert new ones).
-  public void updatePhoneNumbers(int pin, List<String> phones) {
+  public void updatephones(int pin, List<String> phones) {
     // Delete old phone numbers
-    String deleteSql = "DELETE FROM phonenumbers WHERE pin = ?";
+    String deleteSql = "DELETE FROM phones WHERE pin = ?";
     jdbcTemplate.update(deleteSql, pin);
 
     // Insert new phone numbers
-    String insertSql = "INSERT INTO phonenumbers (pin, phone) VALUES (?, ?)";
+    String insertSql = "INSERT INTO phones (pin, phone) VALUES (?, ?)";
     log.info("Phones " + phones);
     for (String phone : phones) {
       jdbcTemplate.update(insertSql, pin, phone);
@@ -191,12 +191,12 @@ public class JdbcContactRepository implements ContactRepository {
   public void deletePhone(int pin, String phone) {
     try {
       // Step 1: Check if the phone exists for the given pin
-      String findPhoneQuery = "SELECT phone_id FROM phonenumbers WHERE phone = ? AND pin = ?";
+      String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
       Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
 
       if (phoneId != null) {
         // Step 2: Delete the phone for the specific pin
-        String deletePhoneQuery = "DELETE FROM phonenumbers WHERE phone_id = ?";
+        String deletePhoneQuery = "DELETE FROM phones WHERE phone_id = ?";
         jdbcTemplate.update(deletePhoneQuery, phoneId);
         log.info("Phone deleted successfully for Pin: {}", pin);
       } else {
