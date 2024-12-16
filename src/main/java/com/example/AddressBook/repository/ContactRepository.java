@@ -14,7 +14,7 @@ public interface ContactRepository {
   List<Contact> searchContactsByParameter(
       String nemeValue, String surnameValue, String genderValue);
 
-  void createContact(
+  void contactCreation(
       int pin,
       String name,
       String surname,
@@ -22,7 +22,7 @@ public interface ContactRepository {
       ContactPhones phones,
       ContactEmails emails);
 
-  void deleteContactByPin(int pin);
+  String deleteContactByPin(int pin);
 
   void updateContactDetails(Contact updatedContact);
 

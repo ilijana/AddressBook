@@ -5,6 +5,8 @@ import com.example.AddressBook.model.Gender;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 @Slf4j
 public class ControllerHelper {
   public Contact updateContact(Contact currentContact, Contact updateRequest) {
@@ -30,13 +32,13 @@ public class ControllerHelper {
     return currentContact;
   }
 
-  boolean isValidGender(String gender) {
+  boolean isInvalidGender(String gender) {
     try {
       Gender.valueOf(gender.toUpperCase());
-      return true;
-    } catch (IllegalArgumentException e) {
-      log.warn("Provided gender is not valid!");
       return false;
+    } catch (IllegalArgumentException e) {
+        log.warn("Provided gender is not valid! Valid genders:{}", Arrays.toString(Gender.values()));
+      return true;
     }
   }
 

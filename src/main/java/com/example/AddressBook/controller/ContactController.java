@@ -3,8 +3,11 @@ package com.example.AddressBook.controller;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
+import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.ContactRepository;
 import io.swagger.v3.oas.annotations.Operation;
+
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +58,10 @@ public class ContactController {
   @PostMapping("/contacts/createContactFromJson")
   public String createContactsUsingBody(@RequestBody List<Contact> contactsRequest) {
     for (Contact contact : contactsRequest) {
-      if (contact.getGender() != null && !controllerHelper.isValidGender(contact.getGender())) {
-        return "Provided gender is not valid!";
+      if (contact.getGender() != null && controllerHelper.isInvalidGender(contact.getGender())) {
+        return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
       }
-      contactRepository.createContact(
+      contactRepository.contactCreation(
           contact.getPin(),
           contact.getName(),
           contact.getSurname(),
@@ -83,10 +86,10 @@ public class ContactController {
       @RequestParam(value = "phone", required = false) ContactPhones phones,
       @RequestParam(value = "email", required = false) ContactEmails emails) {
 
-    if (gender != null && !controllerHelper.isValidGender(gender)) {
-      return "Provided gender is not valid!";
+    if (gender != null && controllerHelper.isInvalidGender(gender)) {
+      return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
     }
-    contactRepository.createContact(pin, name, surname, gender, phones, emails);
+    contactRepository.contactCreation(pin, name, surname, gender, phones, emails);
 
     return "Contact created successfully.";
   }
@@ -96,11 +99,9 @@ public class ContactController {
       description = "Deletes a specific contact. The PIN is a required parameter.")
   @DeleteMapping("/contacts/{pin}")
   public ResponseEntity<String> deleteContactByPin(@PathVariable int pin) {
-    // Delete the contact by pin
-    contactRepository.deleteContactByPin(pin);
+    String returnMsg = contactRepository.deleteContactByPin(pin);
 
-    // Return a response indicating successful deletion
-    return ResponseEntity.ok("Contact with pin " + pin + " has been deleted successfully.");
+    return ResponseEntity.ok(returnMsg);
   }
 
   @Operation(
@@ -110,8 +111,8 @@ public class ContactController {
   @PutMapping("/contacts/updateContact/{pin}")
   public String updateContact(@PathVariable int pin, @RequestBody Contact updateRequest) {
     if (updateRequest.getGender() != null
-        && !controllerHelper.isValidGender(updateRequest.getGender())) {
-      return "Provided gender is not valid!";
+        && controllerHelper.isInvalidGender(updateRequest.getGender())) {
+      return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
     }
     Contact currentContact = contactRepository.getContactByPin(pin);
     Contact updatedContact = controllerHelper.updateContact(currentContact, updateRequest);

@@ -8,7 +8,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,26 +79,36 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.query(sql, contractMapping, providedParams.toArray());
   }
 
+  @Transactional
+  public void contactCreation(int pin,
+                              String name,
+                              String surname,
+                              String gender,
+                              ContactPhones phones,
+                              ContactEmails emails) {
+    createContact(pin, name, surname, gender);
+    createEmails(pin, emails);
+    createPhones(pin, phones);
+  }
   // Create new contact.
   public void createContact(
       int pin,
       String name,
       String surname,
-      String gender,
-      ContactPhones phones,
-      ContactEmails emails) {
+      String gender) {
 
     // Insert into contacts table
     if (gender != null) {
       String sqlContact =
-          "INSERT INTO contacts (pin, name, surname, gender) "
-              + "VALUES (?, ?, ?, CAST(UPPER(?) AS gender))";
+              "INSERT INTO contacts (pin, name, surname, gender) "
+                      + "VALUES (?, ?, ?, CAST(UPPER(?) AS gender))";
       jdbcTemplate.update(sqlContact, pin, name, surname, gender);
     } else {
       String sqlContact = "INSERT INTO contacts (pin, name, surname) VALUES (?, ?, ?)";
       jdbcTemplate.update(sqlContact, pin, name, surname);
     }
-
+  }
+  public void createPhones(int pin, ContactPhones phones) {
     // Insert phone numbers into phones table
     String sqlPhone = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
     if (phones != null) {
@@ -107,7 +116,9 @@ public class JdbcContactRepository implements ContactRepository {
         jdbcTemplate.update(sqlPhone, phone, pin);
       }
     }
+  }
 
+  public void createEmails(int pin, ContactEmails emails) {
     // Insert emails into emails table
     String sqlEmail = "INSERT INTO emails (email, pin) VALUES (?, ?)";
     if (emails != null) {
@@ -117,10 +128,17 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  // Method to delete a contact by pin.
-  public void deleteContactByPin(int pin) {
+  public String deleteContactByPin(int pin) {
     String sql = "DELETE FROM contacts WHERE pin = ?";
-    jdbcTemplate.update(sql, pin);
+    // Perform the update (deletion) and get the number of affected rows
+    int rowsAffected = jdbcTemplate.update(sql, pin);
+
+    // If no rows were affected the PIN doesn't exist
+    if (rowsAffected == 0) {
+      return "No contact found with PIN: " + pin;
+    } else {
+      return "Contact with PIN " + pin + " deleted successfully.";
+    }
   }
 
   // Main method to update contact details.
@@ -132,7 +150,7 @@ public class JdbcContactRepository implements ContactRepository {
         updatedContact.getSurname(),
         updatedContact.getGender());
     updateEmails(updatedContact.getPin(), updatedContact.getEmails());
-    updatephones(updatedContact.getPin(), updatedContact.getPhones());
+    updatePhones(updatedContact.getPin(), updatedContact.getPhones());
   }
 
   // Update contact details (name, surname, gender).
@@ -156,7 +174,7 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   // Update phone numbers for a given contact (delete old, insert new ones).
-  public void updatephones(int pin, List<String> phones) {
+  public void updatePhones(int pin, List<String> phones) {
     // Delete old phone numbers
     String deleteSql = "DELETE FROM phones WHERE pin = ?";
     jdbcTemplate.update(deleteSql, pin);
@@ -170,27 +188,21 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   public void deleteEmail(int pin, String email) {
-    try {
-      // Step 1: Check if the email exists for the given pin
-      String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
-      Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, email, pin);
+    // Step 1: Check if the email exists for the given pin
+    String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
+    Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, email, pin);
 
-      if (emailId != null) {
-        // Step 2: Delete the email for the specific pin
-        String deleteEmailQuery = "DELETE FROM emails WHERE email_id = ?";
-        jdbcTemplate.update(deleteEmailQuery, emailId);
-        log.info("Email deleted successfully for Pin: {}", pin);
-      } else {
-        log.info("No email found for the specified Pin: {}", pin);
-      }
-    } catch (DataAccessException e) {
-      log.info("An error occurred while trying to delete the email: {}", String.valueOf(e));
+    if (emailId != null) {
+      // Step 2: Delete the email for the specific pin
+      String deleteEmailQuery = "DELETE FROM emails WHERE email_id = ?";
+      jdbcTemplate.update(deleteEmailQuery, emailId);
+    } else {
+      log.info("No email found for the specified Pin: {}", pin);
     }
   }
 
   public void deletePhone(int pin, String phone) {
-    try {
-      // Step 1: Check if the phone exists for the given pin
+     // Step 1: Check if the phone exists for the given pin
       String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
       Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
 
@@ -202,9 +214,6 @@ public class JdbcContactRepository implements ContactRepository {
       } else {
         log.info("No phone found for the specified Pin: {}", pin);
       }
-    } catch (DataAccessException e) {
-      log.info("An error occurred while trying to delete the phone: {}", String.valueOf(e));
-    }
   }
 
   private List<Object> getProvidedRequestParams(
