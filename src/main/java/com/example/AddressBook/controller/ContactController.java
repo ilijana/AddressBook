@@ -6,7 +6,6 @@ import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.ContactRepository;
 import io.swagger.v3.oas.annotations.Operation;
-
 import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;

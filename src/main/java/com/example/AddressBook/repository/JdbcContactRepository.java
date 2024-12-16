@@ -80,34 +80,32 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   @Transactional
-  public void contactCreation(int pin,
-                              String name,
-                              String surname,
-                              String gender,
-                              ContactPhones phones,
-                              ContactEmails emails) {
+  public void contactCreation(
+      int pin,
+      String name,
+      String surname,
+      String gender,
+      ContactPhones phones,
+      ContactEmails emails) {
     createContact(pin, name, surname, gender);
     createEmails(pin, emails);
     createPhones(pin, phones);
   }
   // Create new contact.
-  public void createContact(
-      int pin,
-      String name,
-      String surname,
-      String gender) {
+  public void createContact(int pin, String name, String surname, String gender) {
 
     // Insert into contacts table
     if (gender != null) {
       String sqlContact =
-              "INSERT INTO contacts (pin, name, surname, gender) "
-                      + "VALUES (?, ?, ?, CAST(UPPER(?) AS gender))";
+          "INSERT INTO contacts (pin, name, surname, gender) "
+              + "VALUES (?, ?, ?, CAST(UPPER(?) AS gender))";
       jdbcTemplate.update(sqlContact, pin, name, surname, gender);
     } else {
       String sqlContact = "INSERT INTO contacts (pin, name, surname) VALUES (?, ?, ?)";
       jdbcTemplate.update(sqlContact, pin, name, surname);
     }
   }
+
   public void createPhones(int pin, ContactPhones phones) {
     // Insert phone numbers into phones table
     String sqlPhone = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
@@ -202,18 +200,18 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   public void deletePhone(int pin, String phone) {
-     // Step 1: Check if the phone exists for the given pin
-      String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
-      Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
+    // Step 1: Check if the phone exists for the given pin
+    String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
+    Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
 
-      if (phoneId != null) {
-        // Step 2: Delete the phone for the specific pin
-        String deletePhoneQuery = "DELETE FROM phones WHERE phone_id = ?";
-        jdbcTemplate.update(deletePhoneQuery, phoneId);
-        log.info("Phone deleted successfully for Pin: {}", pin);
-      } else {
-        log.info("No phone found for the specified Pin: {}", pin);
-      }
+    if (phoneId != null) {
+      // Step 2: Delete the phone for the specific pin
+      String deletePhoneQuery = "DELETE FROM phones WHERE phone_id = ?";
+      jdbcTemplate.update(deletePhoneQuery, phoneId);
+      log.info("Phone deleted successfully for Pin: {}", pin);
+    } else {
+      log.info("No phone found for the specified Pin: {}", pin);
+    }
   }
 
   private List<Object> getProvidedRequestParams(

@@ -3,9 +3,8 @@ package com.example.AddressBook.controller;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.Gender;
 import io.micrometer.common.util.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ControllerHelper {
@@ -37,7 +36,7 @@ public class ControllerHelper {
       Gender.valueOf(gender.toUpperCase());
       return false;
     } catch (IllegalArgumentException e) {
-        log.warn("Provided gender is not valid! Valid genders:{}", Arrays.toString(Gender.values()));
+      log.warn("Provided gender is not valid! Valid genders:{}", Arrays.toString(Gender.values()));
       return true;
     }
   }
