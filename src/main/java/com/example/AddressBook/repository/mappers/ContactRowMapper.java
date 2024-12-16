@@ -2,10 +2,9 @@ package com.example.AddressBook.repository.mappers;
 
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
+import com.example.AddressBook.model.ContactPhones;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import com.example.AddressBook.model.ContactPhones;
 import org.springframework.jdbc.core.RowMapper;
 
 public class ContactRowMapper implements RowMapper<Contact> {

@@ -3,7 +3,6 @@ package com.example.AddressBook.repository;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
-
 import java.util.List;
 
 public interface ContactRepository {
@@ -12,7 +11,8 @@ public interface ContactRepository {
 
   Contact getContactByPin(int pin);
 
-  List<Contact> searchContactsByParameter(String nemeValue, String surnameValue, String genderValue);
+  List<Contact> searchContactsByParameter(
+      String nemeValue, String surnameValue, String genderValue);
 
   void createContact(
       int pin,

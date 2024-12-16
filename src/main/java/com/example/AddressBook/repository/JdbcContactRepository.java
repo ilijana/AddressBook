@@ -2,11 +2,9 @@ package com.example.AddressBook.repository;
 
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
-
-import java.util.*;
-
 import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.repository.mappers.ContactRowMapper;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,7 @@ public class JdbcContactRepository implements ContactRepository {
 
   @Autowired private JdbcTemplate jdbcTemplate;
 
-  //Search for all contacts, each contact is printed in one row
+  // Search for all contacts, each contact is printed in one row
   public List<Contact> getAllContacts() {
     String sql =
         "SELECT "
@@ -41,7 +39,7 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.query(sql, contractMapping);
   }
 
-  //Search by pin, print contact in one row
+  // Search by pin, print contact in one row
   public Contact getContactByPin(int pin) {
     String sql =
         "SELECT "
@@ -57,9 +55,11 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.queryForObject(sql, contractMapping, pin);
   }
 
-  //Search contact by parameters name, surname and gender. Using multiple parameters is allowed.
-  public List<Contact> searchContactsByParameter(String searchName, String searchSurname, String searchGender) {
-    String sqlMultipleSearch = formSqlQueryForMultipleParam(searchName, searchSurname, searchGender);
+  // Search contact by parameters name, surname and gender. Using multiple parameters is allowed.
+  public List<Contact> searchContactsByParameter(
+      String searchName, String searchSurname, String searchGender) {
+    String sqlMultipleSearch =
+        formSqlQueryForMultipleParam(searchName, searchSurname, searchGender);
     List<Object> providedParams = getProvidedRequestParams(searchName, searchSurname, searchGender);
 
     String sql =
@@ -80,7 +80,7 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.query(sql, contractMapping, providedParams.toArray());
   }
 
-  //Create new contact.
+  // Create new contact.
   public void createContact(
       int pin,
       String name,
@@ -126,14 +126,19 @@ public class JdbcContactRepository implements ContactRepository {
   // Main method to update contact details.
   @Transactional
   public void updateContactDetails(Contact updatedContact) {
-    updateContact(updatedContact.getPin(), updatedContact.getName(), updatedContact.getSurname(), updatedContact.getGender());
+    updateContact(
+        updatedContact.getPin(),
+        updatedContact.getName(),
+        updatedContact.getSurname(),
+        updatedContact.getGender());
     updateEmails(updatedContact.getPin(), updatedContact.getEmails());
     updatePhoneNumbers(updatedContact.getPin(), updatedContact.getPhones());
   }
 
   // Update contact details (name, surname, gender).
   public void updateContact(int pin, String name, String surname, String gender) {
-    String sql = "UPDATE contacts SET name = ?, surname = ?, gender = CAST(UPPER(?) AS gender) WHERE pin = ?";
+    String sql =
+        "UPDATE contacts SET name = ?, surname = ?, gender = CAST(UPPER(?) AS gender) WHERE pin = ?";
     jdbcTemplate.update(sql, name, surname, gender, pin);
   }
 
@@ -174,12 +179,12 @@ public class JdbcContactRepository implements ContactRepository {
         // Step 2: Delete the email for the specific pin
         String deleteEmailQuery = "DELETE FROM emails WHERE email_id = ?";
         jdbcTemplate.update(deleteEmailQuery, emailId);
-          log.info("Email deleted successfully for Pin: {}", pin);
+        log.info("Email deleted successfully for Pin: {}", pin);
       } else {
-          log.info("No email found for the specified Pin: {}", pin);
+        log.info("No email found for the specified Pin: {}", pin);
       }
     } catch (DataAccessException e) {
-        log.info("An error occurred while trying to delete the email: {}", String.valueOf(e));
+      log.info("An error occurred while trying to delete the email: {}", String.valueOf(e));
     }
   }
 
@@ -198,11 +203,12 @@ public class JdbcContactRepository implements ContactRepository {
         log.info("No phone found for the specified Pin: {}", pin);
       }
     } catch (DataAccessException e) {
-        log.info("An error occurred while trying to delete the phone: {}", String.valueOf(e));
+      log.info("An error occurred while trying to delete the phone: {}", String.valueOf(e));
     }
   }
 
-  private List<Object> getProvidedRequestParams(String searchName, String searchSurname, String searchGender) {
+  private List<Object> getProvidedRequestParams(
+      String searchName, String searchSurname, String searchGender) {
     List<Object> params = new ArrayList<>();
     if (searchName != null) {
       params.add(searchName);
@@ -216,20 +222,21 @@ public class JdbcContactRepository implements ContactRepository {
     return params;
   }
 
-  private String formSqlQueryForMultipleParam(String searchName, String searchSurname, String searchGender) {
+  private String formSqlQueryForMultipleParam(
+      String searchName, String searchSurname, String searchGender) {
     StringBuilder sql = new StringBuilder();
 
-    if (searchName != null){
+    if (searchName != null) {
       sql.append("c.name ILIKE ? ");
     }
     if (searchSurname != null) {
-      if (!sql.isEmpty()){
+      if (!sql.isEmpty()) {
         sql.append("AND ");
       }
       sql.append("c.surname ILIKE ? ");
     }
     if (searchGender != null) {
-      if (!sql.isEmpty()){
+      if (!sql.isEmpty()) {
         sql.append("AND ");
       }
       sql.append("CAST(c.gender AS TEXT) ILIKE ? ");

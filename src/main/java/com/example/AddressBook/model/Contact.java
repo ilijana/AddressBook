@@ -1,6 +1,5 @@
 package com.example.AddressBook.model;
 
-import java.util.List;
 import lombok.Data;
 
 @Data
