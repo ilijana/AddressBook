@@ -31,4 +31,7 @@ public interface ContactRepository {
   void deleteEmail(Integer pin, String email);
 
   void deletePhone(Integer pin, String phone);
+
+  void updateContactAttribute(Integer pin, String attribute, String newValue, String oldValue);
+
 }

@@ -5,6 +5,8 @@ import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.mappers.ContactRowMapper;
+
+import java.sql.SQLException;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,6 @@ public class JdbcContactRepository implements ContactRepository {
             + "LEFT JOIN phones p ON c.pin = p.pin "
             + "LEFT JOIN emails e ON c.pin = e.pin "
             + "GROUP BY c.pin, c.name, c.surname, c.gender";
-    log.info(sql);
     return jdbcTemplate.query(sql, contractMapping);
   }
 
@@ -60,9 +61,7 @@ public class JdbcContactRepository implements ContactRepository {
       String searchName, String searchSurname, Gender searchGender) {
     String sqlMultipleSearch =
         formSqlQueryForMultipleParam(searchName, searchSurname, searchGender);
-    log.info(sqlMultipleSearch);
     List<Object> providedParams = getProvidedRequestParams(searchName, searchSurname, searchGender);
-    log.info(providedParams.toString());
     String sql =
         "SELECT "
             + "c.pin, "
@@ -173,6 +172,41 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
+  public void updateContactAttribute(Integer pin, String attribute, String newValue, String oldValue) {
+    if(attribute.equals("name") || attribute.equals("surname") || attribute.equals("gender")) {
+      updateAttribute(pin, attribute, newValue);
+    } else {
+      addAfterDeletingAttribute(pin, attribute, newValue, oldValue);
+    }
+  }
+
+  public void updateAttribute(Integer pin, String attribute, String newValue) {
+    String sql = "";
+    switch (attribute) {
+      case "gender" -> sql = "UPDATE contacts SET " + attribute + " = CAST(UPPER(?) AS gender) WHERE pin = ?";
+      case "name", "surname" -> sql = "UPDATE contacts SET " + attribute + " = ? WHERE pin = ?";
+    }
+    jdbcTemplate.update(sql, newValue, pin);
+  }
+
+  @Transactional(rollbackFor = SQLException.class)
+  public void addAfterDeletingAttribute(Integer pin, String attribute, String newValue, String oldValue) {
+    switch (attribute) {
+      case "emails" -> {
+        if (oldValue != null) {
+          deleteEmail(pin, oldValue);
+        }
+        addEmail(pin, newValue);
+      }
+      case "phones" -> {
+        if (oldValue != null) {
+          deletePhone(pin, oldValue);
+        }
+        addPhone(pin, newValue);
+      }
+    }
+  }
+
   public void deleteEmail(Integer pin, String email) {
     String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
     Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, email, pin);
@@ -189,7 +223,6 @@ public class JdbcContactRepository implements ContactRepository {
   public void deletePhone(Integer pin, String phone) {
     String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
     Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
-
     if (phoneId != null) {
       String deletePhoneQuery = "DELETE FROM phones WHERE phone_id = ?";
       jdbcTemplate.update(deletePhoneQuery, phoneId);
@@ -197,6 +230,16 @@ public class JdbcContactRepository implements ContactRepository {
     } else {
       log.info("No phone found for the specified Pin: {}", pin);
     }
+  }
+
+  public void addPhone(Integer pin, String newValue) {
+    String sql = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
+    jdbcTemplate.update(sql, newValue, pin);
+  }
+
+  public void addEmail(Integer pin, String newValue) {
+    String sql = "INSERT INTO emails (email, pin) VALUES (?, ?)";
+    jdbcTemplate.update(sql, newValue, pin);
   }
 
   private List<Object> getProvidedRequestParams(
