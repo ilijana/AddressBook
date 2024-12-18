@@ -6,8 +6,11 @@ import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.ContactRepository;
 import io.swagger.v3.oas.annotations.Operation;
-import java.util.Arrays;
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +31,12 @@ public class ContactController {
       summary = "Find contact by PIN (Personal Identification Number).",
       description = "Retrieves a specific contact. The PIN is a required parameter.")
   @GetMapping("/contacts/findContact/{pin}")
-  public Contact getContactByPin(@PathVariable int pin) {
-    return contactRepository.getContactByPin(pin);
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Contact found."),
+          @ApiResponse(responseCode = "404", description = "No records found for the given PIN.")
+  })
+  public ResponseEntity<Contact> getContactByPin(@PathVariable Integer pin) {
+    return ResponseEntity.ok(contactRepository.getContactByPin(pin));
   }
 
   @Operation(
@@ -37,16 +44,19 @@ public class ContactController {
       description =
           "If request parameters are provided, contacts will be filtered according to the given values. If no parameters are provided, all contacts will be returned. Multiple filters can be applied at once.")
   @GetMapping("/contacts/findContacts")
-  public List<Contact> searchContacts(
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "List of contacts found for the given criteria.")
+  })
+  public ResponseEntity<List<Contact>> searchContacts(
       @RequestParam(value = "name", required = false) String nameRequest,
       @RequestParam(value = "surname", required = false) String surnameRequest,
-      @RequestParam(value = "gender", required = false) String genderRequest) {
+      @RequestParam(value = "gender", required = false) Gender genderRequest) {
 
     if (controllerHelper.checkIfRequestParamIsSet(nameRequest, surnameRequest, genderRequest)) {
-      return contactRepository.searchContactsByParameter(
-          nameRequest, surnameRequest, genderRequest);
+      return ResponseEntity.ok(contactRepository.searchContactsByParameter(
+          nameRequest, surnameRequest, genderRequest));
     } else {
-      return contactRepository.getAllContacts();
+      return ResponseEntity.ok(contactRepository.getAllContacts());
     }
   }
 
@@ -55,11 +65,13 @@ public class ContactController {
       description =
           "The contact details must be provided in the URL, with PIN, name, and surname being mandatory for contact creation.")
   @PostMapping("/contacts/createContactFromJson")
-  public String createContactsUsingBody(@RequestBody List<Contact> contactsRequest) {
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Contact creation was successful."),
+          @ApiResponse(responseCode = "400", description = "Data integrity violation."),
+          @ApiResponse(responseCode = "404", description = "Data validation failed.")
+  })
+  public ResponseEntity<String> createContactsUsingBody(@RequestBody List<@Valid Contact> contactsRequest) {
     for (Contact contact : contactsRequest) {
-      if (contact.getGender() != null && controllerHelper.isInvalidGender(contact.getGender())) {
-        return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
-      }
       contactRepository.contactCreation(
           contact.getPin(),
           contact.getName(),
@@ -69,7 +81,7 @@ public class ContactController {
           contact.getEmails());
     }
 
-    return "Contacts created successfully.";
+    return ResponseEntity.ok("Contacts created successfully.");
   }
 
   @Operation(
@@ -77,27 +89,32 @@ public class ContactController {
       description =
           "The contact details should be provided inside URL. PIN, name, and surname are mandatory for creating the contact.")
   @PostMapping("/contacts/createContact")
-  public String createContactUsingUrlParams(
-      @RequestParam("pin") int pin,
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Contact creation was successful."),
+          @ApiResponse(responseCode = "400", description = "Data integrity violation.")
+  })
+  public ResponseEntity<String> createContactUsingUrlParams(
+      @RequestParam("pin") Integer pin,
       @RequestParam("name") String name,
       @RequestParam("surname") String surname,
-      @RequestParam(value = "gender", required = false) String gender,
+      @RequestParam(value = "gender", required = false) Gender gender,
       @RequestParam(value = "phone", required = false) ContactPhones phones,
       @RequestParam(value = "email", required = false) ContactEmails emails) {
 
-    if (gender != null && controllerHelper.isInvalidGender(gender)) {
-      return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
-    }
     contactRepository.contactCreation(pin, name, surname, gender, phones, emails);
 
-    return "Contact created successfully.";
+    return ResponseEntity.ok("Contact created successfully.");
   }
 
   @Operation(
       summary = "Deletes contact by PIN (Personal Identification Number).",
       description = "Deletes a specific contact. The PIN is a required parameter.")
   @DeleteMapping("/contacts/{pin}")
-  public ResponseEntity<String> deleteContactByPin(@PathVariable int pin) {
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Delete operation was successful."),
+          @ApiResponse(responseCode = "400", description = "Data integrity violation.")
+  })
+  public ResponseEntity<String> deleteContactByPin(@PathVariable Integer pin) {
     String returnMsg = contactRepository.deleteContactByPin(pin);
 
     return ResponseEntity.ok(returnMsg);
@@ -108,32 +125,40 @@ public class ContactController {
       description =
           "Accessing a contact using the PIN (Personal Identification Number) and updating its data, only for the attributes provided in the JSON body. If an attribute is not defined, the old value will be retained.")
   @PutMapping("/contacts/updateContact/{pin}")
-  public String updateContact(@PathVariable int pin, @RequestBody Contact updateRequest) {
-    if (updateRequest.getGender() != null
-        && controllerHelper.isInvalidGender(updateRequest.getGender())) {
-      return "Provided gender is not valid! Valid genders:" + Arrays.toString(Gender.values());
-    }
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Update was successful."),
+          @ApiResponse(responseCode = "400", description = "Data integrity violation.")
+  })
+  public ResponseEntity<String> updateContact(@PathVariable Integer pin, @RequestBody Contact updateRequest) {
     Contact currentContact = contactRepository.getContactByPin(pin);
     Contact updatedContact = controllerHelper.updateContact(currentContact, updateRequest);
     contactRepository.updateContactDetails(updatedContact);
-    return "Contact updated successfully!";
+    return ResponseEntity.ok("Contact updated successfully!");
   }
 
   @Operation(
       summary = "Delete the email associated with a specific contact",
       description = "PIN (Personal Identification Number) and email are required parameter.")
   @DeleteMapping("/contacts/deleteEmail")
-  public String deleteEmail(@RequestParam int pin, @RequestParam String email) {
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Delete operation was successful."),
+          @ApiResponse(responseCode = "404", description = "Nothing found for the given criteria.")
+  })
+  public ResponseEntity<String> deleteEmail(@RequestParam Integer pin, @RequestParam String email) {
     contactRepository.deleteEmail(pin, email);
-    return "Email deleted successfully.";
+    return ResponseEntity.ok("Email deleted successfully.");
   }
 
   @Operation(
       summary = "Delete the phone number associated with a specific contact",
       description = "PIN (Personal Identification Number) and phone number are required parameter.")
   @DeleteMapping("/contacts/deletePhone")
-  public String deletePhone(@RequestParam int pin, @RequestParam String phone) {
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Delete operation was successful."),
+          @ApiResponse(responseCode = "404", description = "Nothing found for the given criteria.")
+  })
+  public ResponseEntity<String> deletePhone(@RequestParam Integer pin, @RequestParam String phone) {
     contactRepository.deletePhone(pin, phone);
-    return "Phone deleted successfully.";
+    return ResponseEntity.ok("Phone deleted successfully.");
   }
 }

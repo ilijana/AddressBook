@@ -3,30 +3,32 @@ package com.example.AddressBook.repository;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
+import com.example.AddressBook.model.Gender;
+
 import java.util.List;
 
 public interface ContactRepository {
 
   List<Contact> getAllContacts();
 
-  Contact getContactByPin(int pin);
+  Contact getContactByPin(Integer pin);
 
   List<Contact> searchContactsByParameter(
-      String nemeValue, String surnameValue, String genderValue);
+      String nameValue, String surnameValue, Gender genderValue);
 
   void contactCreation(
-      int pin,
+      Integer pin,
       String name,
       String surname,
-      String gender,
+      Gender gender,
       ContactPhones phones,
       ContactEmails emails);
 
-  String deleteContactByPin(int pin);
+  String deleteContactByPin(Integer pin);
 
   void updateContactDetails(Contact updatedContact);
 
-  void deleteEmail(int pin, String email);
+  void deleteEmail(Integer pin, String email);
 
-  void deletePhone(int pin, String phone);
+  void deletePhone(Integer pin, String phone);
 }

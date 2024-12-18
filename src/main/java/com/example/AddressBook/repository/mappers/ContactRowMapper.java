@@ -5,6 +5,8 @@ import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.example.AddressBook.model.Gender;
 import org.springframework.jdbc.core.RowMapper;
 
 public class ContactRowMapper implements RowMapper<Contact> {
@@ -18,7 +20,7 @@ public class ContactRowMapper implements RowMapper<Contact> {
     contact.setSurname(rs.getString("surname"));
 
     if (rs.getString("gender") != null) {
-      contact.setGender(rs.getString("gender"));
+      contact.setGender(Gender.valueOf(rs.getString("gender")));
     }
 
     ContactPhones phones = new ContactPhones();

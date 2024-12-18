@@ -3,6 +3,7 @@ package com.example.AddressBook.repository;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
+import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.mappers.ContactRowMapper;
 import java.util.*;
 import org.slf4j.Logger;
@@ -34,12 +35,12 @@ public class JdbcContactRepository implements ContactRepository {
             + "LEFT JOIN phones p ON c.pin = p.pin "
             + "LEFT JOIN emails e ON c.pin = e.pin "
             + "GROUP BY c.pin, c.name, c.surname, c.gender";
-
+    log.info(sql);
     return jdbcTemplate.query(sql, contractMapping);
   }
 
   // Search by pin, print contact in one row
-  public Contact getContactByPin(int pin) {
+  public Contact getContactByPin(Integer pin) {
     String sql =
         "SELECT "
             + "c.pin, c.name, c.surname, c.gender, "
@@ -56,11 +57,12 @@ public class JdbcContactRepository implements ContactRepository {
 
   // Search contact by parameters name, surname and gender. Using multiple parameters is allowed.
   public List<Contact> searchContactsByParameter(
-      String searchName, String searchSurname, String searchGender) {
+      String searchName, String searchSurname, Gender searchGender) {
     String sqlMultipleSearch =
         formSqlQueryForMultipleParam(searchName, searchSurname, searchGender);
+    log.info(sqlMultipleSearch);
     List<Object> providedParams = getProvidedRequestParams(searchName, searchSurname, searchGender);
-
+    log.info(providedParams.toString());
     String sql =
         "SELECT "
             + "c.pin, "
@@ -81,33 +83,30 @@ public class JdbcContactRepository implements ContactRepository {
 
   @Transactional
   public void contactCreation(
-      int pin,
+      Integer pin,
       String name,
       String surname,
-      String gender,
+      Gender gender,
       ContactPhones phones,
       ContactEmails emails) {
     createContact(pin, name, surname, gender);
     createEmails(pin, emails);
     createPhones(pin, phones);
   }
-  // Create new contact.
-  public void createContact(int pin, String name, String surname, String gender) {
 
-    // Insert into contacts table
+  public void createContact(Integer pin, String name, String surname, Gender gender) {
     if (gender != null) {
       String sqlContact =
           "INSERT INTO contacts (pin, name, surname, gender) "
-              + "VALUES (?, ?, ?, CAST(UPPER(?) AS gender))";
-      jdbcTemplate.update(sqlContact, pin, name, surname, gender);
+              + "VALUES (?, ?, ?, CAST(? AS gender))";
+      jdbcTemplate.update(sqlContact, pin, name, surname, gender.toString());
     } else {
       String sqlContact = "INSERT INTO contacts (pin, name, surname) VALUES (?, ?, ?)";
       jdbcTemplate.update(sqlContact, pin, name, surname);
     }
   }
 
-  public void createPhones(int pin, ContactPhones phones) {
-    // Insert phone numbers into phones table
+  public void createPhones(Integer pin, ContactPhones phones) {
     String sqlPhone = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
     if (phones != null) {
       for (String phone : phones) {
@@ -116,8 +115,7 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  public void createEmails(int pin, ContactEmails emails) {
-    // Insert emails into emails table
+  public void createEmails(Integer pin, ContactEmails emails) {
     String sqlEmail = "INSERT INTO emails (email, pin) VALUES (?, ?)";
     if (emails != null) {
       for (String email : emails) {
@@ -126,12 +124,11 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  public String deleteContactByPin(int pin) {
+  public String deleteContactByPin(Integer pin) {
     String sql = "DELETE FROM contacts WHERE pin = ?";
     // Perform the update (deletion) and get the number of affected rows
     int rowsAffected = jdbcTemplate.update(sql, pin);
 
-    // If no rows were affected the PIN doesn't exist
     if (rowsAffected == 0) {
       return "No contact found with PIN: " + pin;
     } else {
@@ -139,7 +136,6 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  // Main method to update contact details.
   @Transactional
   public void updateContactDetails(Contact updatedContact) {
     updateContact(
@@ -151,61 +147,50 @@ public class JdbcContactRepository implements ContactRepository {
     updatePhones(updatedContact.getPin(), updatedContact.getPhones());
   }
 
-  // Update contact details (name, surname, gender).
-  public void updateContact(int pin, String name, String surname, String gender) {
+  public void updateContact(Integer pin, String name, String surname, Gender gender) {
     String sql =
         "UPDATE contacts SET name = ?, surname = ?, gender = CAST(UPPER(?) AS gender) WHERE pin = ?";
-    jdbcTemplate.update(sql, name, surname, gender, pin);
+    jdbcTemplate.update(sql, name, surname, gender.toString(), pin);
   }
 
-  // Update emails for a given contact (delete old, insert new ones).
-  public void updateEmails(int pin, List<String> emails) {
-    // Delete old emails
+  public void updateEmails(Integer pin, List<String> emails) {
     String deleteSql = "DELETE FROM emails WHERE pin = ?";
     jdbcTemplate.update(deleteSql, pin);
 
-    // Insert new emails
     String insertSql = "INSERT INTO emails (pin, email) VALUES (?, ?)";
     for (String email : emails) {
       jdbcTemplate.update(insertSql, pin, email);
     }
   }
 
-  // Update phone numbers for a given contact (delete old, insert new ones).
-  public void updatePhones(int pin, List<String> phones) {
-    // Delete old phone numbers
+  public void updatePhones(Integer pin, List<String> phones) {
     String deleteSql = "DELETE FROM phones WHERE pin = ?";
     jdbcTemplate.update(deleteSql, pin);
 
-    // Insert new phone numbers
     String insertSql = "INSERT INTO phones (pin, phone) VALUES (?, ?)";
-    log.info("Phones " + phones);
     for (String phone : phones) {
       jdbcTemplate.update(insertSql, pin, phone);
     }
   }
 
-  public void deleteEmail(int pin, String email) {
-    // Step 1: Check if the email exists for the given pin
+  public void deleteEmail(Integer pin, String email) {
     String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
     Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, email, pin);
 
     if (emailId != null) {
-      // Step 2: Delete the email for the specific pin
       String deleteEmailQuery = "DELETE FROM emails WHERE email_id = ?";
       jdbcTemplate.update(deleteEmailQuery, emailId);
+      log.info("Email deleted successfully for Pin: {}", pin);
     } else {
       log.info("No email found for the specified Pin: {}", pin);
     }
   }
 
-  public void deletePhone(int pin, String phone) {
-    // Step 1: Check if the phone exists for the given pin
+  public void deletePhone(Integer pin, String phone) {
     String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
     Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, phone, pin);
 
     if (phoneId != null) {
-      // Step 2: Delete the phone for the specific pin
       String deletePhoneQuery = "DELETE FROM phones WHERE phone_id = ?";
       jdbcTemplate.update(deletePhoneQuery, phoneId);
       log.info("Phone deleted successfully for Pin: {}", pin);
@@ -215,7 +200,7 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   private List<Object> getProvidedRequestParams(
-      String searchName, String searchSurname, String searchGender) {
+      String searchName, String searchSurname, Gender searchGender) {
     List<Object> params = new ArrayList<>();
     if (searchName != null) {
       params.add(searchName);
@@ -224,13 +209,13 @@ public class JdbcContactRepository implements ContactRepository {
       params.add(searchSurname);
     }
     if (searchGender != null) {
-      params.add(searchGender);
+      params.add(searchGender.toString());
     }
     return params;
   }
 
   private String formSqlQueryForMultipleParam(
-      String searchName, String searchSurname, String searchGender) {
+      String searchName, String searchSurname, Gender searchGender) {
     StringBuilder sql = new StringBuilder();
 
     if (searchName != null) {
@@ -246,7 +231,7 @@ public class JdbcContactRepository implements ContactRepository {
       if (!sql.isEmpty()) {
         sql.append("AND ");
       }
-      sql.append("CAST(c.gender AS TEXT) ILIKE ? ");
+      sql.append("CAST(c.gender AS TEXT) = ? ");
     }
     return sql.toString().trim();
   }

@@ -7,7 +7,6 @@ public class ErrorResponse {
   private String errorType;
   private String errorMessage;
 
-  // Constructor
   public ErrorResponse(String errorType, String errorMessage) {
     this.errorType = errorType;
     this.errorMessage = errorMessage;

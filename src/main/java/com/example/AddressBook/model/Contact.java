@@ -1,13 +1,17 @@
 package com.example.AddressBook.model;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class Contact {
-  private int pin;
+  @NotNull(message = "Must be provided as an argument!")
+  private Integer pin;
+  @NotNull(message = "name is mandatory")
   private String name;
+  @NotNull(message = "surname is mandatory")
   private String surname;
-  private String gender;
+  private Gender gender;
   private ContactEmails emails;
   private ContactPhones phones;
 

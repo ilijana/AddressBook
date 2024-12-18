@@ -2,8 +2,6 @@ package com.example.AddressBook.controller;
 
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.Gender;
-import io.micrometer.common.util.StringUtils;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -31,19 +29,9 @@ public class ControllerHelper {
     return currentContact;
   }
 
-  boolean isInvalidGender(String gender) {
-    try {
-      Gender.valueOf(gender.toUpperCase());
-      return false;
-    } catch (IllegalArgumentException e) {
-      log.warn("Provided gender is not valid! Valid genders:{}", Arrays.toString(Gender.values()));
-      return true;
-    }
-  }
-
-  boolean checkIfRequestParamIsSet(String name, String surname, String gender) {
-    return StringUtils.isNotBlank(name)
-        || StringUtils.isNotBlank(surname)
-        || StringUtils.isNotBlank(gender);
+  boolean checkIfRequestParamIsSet(String name, String surname, Gender gender) {
+    return name != null
+        || surname != null
+        || gender != null;
   }
 }
