@@ -176,7 +176,7 @@ public class JdbcContactRepository implements ContactRepository {
     if(attribute.equals("name") || attribute.equals("surname") || attribute.equals("gender")) {
       updateAttribute(pin, attribute, newValue);
     } else {
-      addAfterDeletingAttribute(pin, attribute, newValue, oldValue);
+      updateAttribute(pin, attribute, newValue, oldValue);
     }
   }
 
@@ -190,19 +190,21 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   @Transactional(rollbackFor = SQLException.class)
-  public void addAfterDeletingAttribute(Integer pin, String attribute, String newValue, String oldValue) {
+  public void updateAttribute(Integer pin, String attribute, String newValue, String oldValue) {
     switch (attribute) {
       case "emails" -> {
         if (oldValue != null) {
-          deleteEmail(pin, oldValue);
+          String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
+          Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, oldValue, pin);
+          updateEmail(emailId, newValue);
         }
-        addEmail(pin, newValue);
       }
       case "phones" -> {
         if (oldValue != null) {
-          deletePhone(pin, oldValue);
+          String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
+          Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, oldValue, pin);
+          updatePhone(phoneId, newValue);
         }
-        addPhone(pin, newValue);
       }
     }
   }
@@ -232,14 +234,14 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  public void addPhone(Integer pin, String newValue) {
-    String sql = "INSERT INTO phones (phone, pin) VALUES (?, ?)";
-    jdbcTemplate.update(sql, newValue, pin);
+  public void updatePhone(Integer phoneId, String newValue) {
+    String sql = "UPDATE phones SET phone = ? WHERE phone_id = ?";
+    jdbcTemplate.update(sql, newValue, phoneId);
   }
 
-  public void addEmail(Integer pin, String newValue) {
-    String sql = "INSERT INTO emails (email, pin) VALUES (?, ?)";
-    jdbcTemplate.update(sql, newValue, pin);
+  public void updateEmail(Integer emailId, String newValue) {
+    String sql = "UPDATE emails SET email = ? WHERE email_id = ?";
+    jdbcTemplate.update(sql, newValue, emailId);
   }
 
   private List<Object> getProvidedRequestParams(

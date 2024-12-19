@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -152,7 +153,7 @@ public class ContactController {
   @ApiResponses(value = {
           @ApiResponse(responseCode = "200", description = "Contact updated."),
           @ApiResponse(responseCode = "400", description = "Data integrity violation."),
-          @ApiResponse(responseCode = "404", description = "Invalid attribute type or no records for the given criteria.")
+          @ApiResponse(responseCode = "404", description = "No records for the given criteria.")
   })
   @PutMapping("/updateContact")
   public ResponseEntity<String> updateContactAttribute(
@@ -160,6 +161,9 @@ public class ContactController {
           @RequestParam("attribute") @Pattern(regexp = "name|surname|gender|emails|phones", message = "Invalid attribute type") String attribute,
           @RequestParam(value = "oldValue", required = false) String oldValue,
           @RequestParam("newValue") String newValue) {
+    if (("phones".equals(attribute) || "emails".equals(attribute)) && oldValue == null) {
+      return new ResponseEntity<>("oldValue is mandatory when provided attribute is phones or emails", HttpStatus.BAD_REQUEST);
+    }
     return contactService.updateContactAttribute(pin, attribute, oldValue, newValue);
   }
 
