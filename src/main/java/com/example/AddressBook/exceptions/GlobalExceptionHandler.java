@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-
 @ControllerAdvice
 @Hidden
 public class GlobalExceptionHandler {
@@ -60,7 +59,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(HandlerMethodValidationException.class)
   public ResponseEntity<String> handleValidationExceptions(HandlerMethodValidationException ex) {
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Validation failed! " + ex.getDetailMessageArguments()[0]);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body("Validation failed! " + ex.getDetailMessageArguments()[0]);
   }
-
 }

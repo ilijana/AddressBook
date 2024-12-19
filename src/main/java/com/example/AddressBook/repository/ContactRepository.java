@@ -4,7 +4,6 @@ import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
-
 import java.util.List;
 
 public interface ContactRepository {
@@ -26,12 +25,11 @@ public interface ContactRepository {
 
   String deleteContactByPin(Integer pin);
 
-  void updateContactDetails(Contact updatedContact);
+  void updateContactDetails(Contact updatedContact, Contact updateRequest);
 
   void deleteEmail(Integer pin, String email);
 
   void deletePhone(Integer pin, String phone);
 
   void updateContactAttribute(Integer pin, String attribute, String newValue, String oldValue);
-
 }

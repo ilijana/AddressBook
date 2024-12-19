@@ -3,10 +3,10 @@ package com.example.AddressBook.service;
 import com.example.AddressBook.model.Contact;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.ContactRepository;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -42,12 +42,11 @@ public class ContactService {
   }
 
   public boolean checkIfRequestParamIsSet(String name, String surname, Gender gender) {
-    return name != null
-        || surname != null
-        || gender != null;
+    return name != null || surname != null || gender != null;
   }
 
-  public ResponseEntity<String> updateContactAttribute(Integer pin, String attribute, String oldValue, String newValue) {
+  public ResponseEntity<String> updateContactAttribute(
+      Integer pin, String attribute, String oldValue, String newValue) {
     Contact existingContact = contactRepository.getContactByPin(pin);
     if (existingContact == null) {
       return ResponseEntity.status(404).body("Contact with pin " + pin + " not found.");
@@ -63,7 +62,8 @@ public class ContactService {
   }
 
   public static boolean isValidPhoneNumber(String phoneNumber) {
-    String PHONE_REGEX = "^\\+?[0-9]{1,4}?[-. \\(\\)]?(\\d{1,3})?[-. \\(\\)]?\\d{1,3}[-. \\(\\)]?\\d{4}$";
+    String PHONE_REGEX =
+        "^\\+?[0-9]{1,4}?[-. \\(\\)]?(\\d{1,3})?[-. \\(\\)]?\\d{1,3}[-. \\(\\)]?\\d{4}$";
     if (phoneNumber == null) {
       return false;
     }
@@ -72,7 +72,7 @@ public class ContactService {
   }
 
   public static boolean isValidEmail(String email) {
-    String PHONE_REGEX =  "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+    String PHONE_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     if (email == null) {
       return false;
     }

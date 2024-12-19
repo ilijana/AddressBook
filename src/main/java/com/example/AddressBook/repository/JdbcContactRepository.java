@@ -5,7 +5,6 @@ import com.example.AddressBook.model.ContactEmails;
 import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.mappers.ContactRowMapper;
-
 import java.sql.SQLException;
 import java.util.*;
 import org.slf4j.Logger;
@@ -136,14 +135,22 @@ public class JdbcContactRepository implements ContactRepository {
   }
 
   @Transactional
-  public void updateContactDetails(Contact updatedContact) {
-    updateContact(
-        updatedContact.getPin(),
-        updatedContact.getName(),
-        updatedContact.getSurname(),
-        updatedContact.getGender());
-    updateEmails(updatedContact.getPin(), updatedContact.getEmails());
-    updatePhones(updatedContact.getPin(), updatedContact.getPhones());
+  public void updateContactDetails(Contact updatedContact, Contact updateRequest) {
+    if (updateRequest.getName() != null
+        || updateRequest.getSurname() != null
+        || updateRequest.getGender() != null) {
+      updateContact(
+          updatedContact.getPin(),
+          updatedContact.getName(),
+          updatedContact.getSurname(),
+          updatedContact.getGender());
+    }
+    if (updateRequest.getEmails() != null) {
+      updateEmails(updatedContact.getPin(), updatedContact.getEmails());
+    }
+    if (updateRequest.getPhones() != null) {
+      updatePhones(updatedContact.getPin(), updatedContact.getPhones());
+    }
   }
 
   public void updateContact(Integer pin, String name, String surname, Gender gender) {
@@ -172,8 +179,9 @@ public class JdbcContactRepository implements ContactRepository {
     }
   }
 
-  public void updateContactAttribute(Integer pin, String attribute, String newValue, String oldValue) {
-    if(attribute.equals("name") || attribute.equals("surname") || attribute.equals("gender")) {
+  public void updateContactAttribute(
+      Integer pin, String attribute, String newValue, String oldValue) {
+    if (attribute.equals("name") || attribute.equals("surname") || attribute.equals("gender")) {
       updateAttribute(pin, attribute, newValue);
     } else {
       updateAttribute(pin, attribute, newValue, oldValue);
@@ -183,7 +191,8 @@ public class JdbcContactRepository implements ContactRepository {
   public void updateAttribute(Integer pin, String attribute, String newValue) {
     String sql = "";
     switch (attribute) {
-      case "gender" -> sql = "UPDATE contacts SET " + attribute + " = CAST(UPPER(?) AS gender) WHERE pin = ?";
+      case "gender" ->
+          sql = "UPDATE contacts SET " + attribute + " = CAST(UPPER(?) AS gender) WHERE pin = ?";
       case "name", "surname" -> sql = "UPDATE contacts SET " + attribute + " = ? WHERE pin = ?";
     }
     jdbcTemplate.update(sql, newValue, pin);
@@ -195,15 +204,21 @@ public class JdbcContactRepository implements ContactRepository {
       case "emails" -> {
         if (oldValue != null) {
           String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
-          Integer emailId = jdbcTemplate.queryForObject(findEmailQuery, Integer.class, oldValue, pin);
+          Integer emailId =
+              jdbcTemplate.queryForObject(findEmailQuery, Integer.class, oldValue, pin);
           updateEmail(emailId, newValue);
+        } else {
+          addEmail(pin, newValue);
         }
       }
       case "phones" -> {
         if (oldValue != null) {
           String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
-          Integer phoneId = jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, oldValue, pin);
+          Integer phoneId =
+              jdbcTemplate.queryForObject(findPhoneQuery, Integer.class, oldValue, pin);
           updatePhone(phoneId, newValue);
+        } else {
+          addPhone(pin, newValue);
         }
       }
     }
@@ -242,6 +257,16 @@ public class JdbcContactRepository implements ContactRepository {
   public void updateEmail(Integer emailId, String newValue) {
     String sql = "UPDATE emails SET email = ? WHERE email_id = ?";
     jdbcTemplate.update(sql, newValue, emailId);
+  }
+
+  public void addPhone(Integer pin, String newValue) {
+    String sql = "INSERT INTO phones (pin, phone) VALUES (?, ?)";
+    jdbcTemplate.update(sql, pin, newValue);
+  }
+
+  public void addEmail(Integer pin, String newValue) {
+    String sql = "INSERT INTO emails (pin, email) VALUES (?, ?)";
+    jdbcTemplate.update(sql, pin, newValue);
   }
 
   private List<Object> getProvidedRequestParams(
