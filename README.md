@@ -64,7 +64,8 @@ The connection details for creating a new server in pgAdmin are provided in the 
 4. After the image is successfully built, you can run the container using the following command:
 >  docker run -p 8080:8080 <image-hash>
 
-Note! <image-hash> will be written in output of step 3.
+   Note! <image-hash> will be written in output of step 3.
+
 5. The application includes Swagger UI for interactive API documentation. Once the application is running, go to: http://localhost:8080/swagger-ui/index.html
    This will show you an interactive UI where you can explore the available endpoints, see their parameters, and try out the API.
 
