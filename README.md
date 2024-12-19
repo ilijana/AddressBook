@@ -41,7 +41,7 @@ The connection details for creating a new server in pgAdmin are provided in the 
 | **Username**         | address_book_hug2_user                                   |
 | **Password**         | p8yzRV9KYjJyMxzo8MiHYgMt17mcWoqC                         |
 
-## Starting the application
+## Starting the application from IDE
 1. Clone the repository:
     > git clone https://github.com/ilijana/AddressBook.git
 2. The database connection details are available in the application.properties file of the AddressBook project. These details should correspond to the information provided in the table above.
@@ -52,6 +52,20 @@ The connection details for creating a new server in pgAdmin are provided in the 
 
     > mvn spring-boot:run
 4. The application includes Swagger UI for interactive API documentation. Once the application is running, go to: http://localhost:8080/swagger-ui/index.html
+   This will show you an interactive UI where you can explore the available endpoints, see their parameters, and try out the API.
+
+## Starting the application from docker image
+1. Clone the repository:
+> git clone https://github.com/ilijana/AddressBook.git
+2. Navigate to the directory containing the Dockerfile:
+> cd /path/to/your/project
+3. Run the Docker build command:
+> docker image build .
+4. After the image is successfully built, you can run the container using the following command:
+>  docker run -p 8080:8080 <image-hash>
+
+Note! <image-hash> will be written in output of step 3.
+5. The application includes Swagger UI for interactive API documentation. Once the application is running, go to: http://localhost:8080/swagger-ui/index.html
    This will show you an interactive UI where you can explore the available endpoints, see their parameters, and try out the API.
 
 
