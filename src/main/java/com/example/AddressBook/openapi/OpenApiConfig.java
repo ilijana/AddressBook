@@ -14,6 +14,7 @@ public class OpenApiConfig {
         .info(
             new Info()
                 .title("Address Book API Documentation")
-                .description("Detailed description of REST API for my application."));
+                .description(
+                    "Comprehensive documentation of the REST API for managing contacts in the Address Book application. Explore all available endpoints and their functionality."));
   }
 }

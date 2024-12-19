@@ -1,8 +1,11 @@
 package com.example.AddressBook.service;
 
 import com.example.AddressBook.model.Contact;
+import com.example.AddressBook.model.ContactEmails;
+import com.example.AddressBook.model.ContactPhones;
 import com.example.AddressBook.model.Gender;
 import com.example.AddressBook.repository.ContactRepository;
+import java.util.List;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +21,7 @@ public class ContactService {
     this.contactRepository = contactRepository;
   }
 
-  public Contact updateContact(Contact currentContact, Contact updateRequest) {
+  public Contact updateContactWithNewValues(Contact currentContact, Contact updateRequest) {
     if (updateRequest.getName() != null) {
       currentContact.setName(updateRequest.getName());
     }
@@ -78,5 +81,68 @@ public class ContactService {
     }
     Pattern pattern = Pattern.compile(PHONE_REGEX);
     return pattern.matcher(email).matches();
+  }
+
+  public ResponseEntity<List<Contact>> searchContacts(
+      String nameRequest, String surnameRequest, Gender genderRequest) {
+    if (checkIfRequestParamIsSet(nameRequest, surnameRequest, genderRequest)) {
+      return ResponseEntity.ok(
+          contactRepository.searchContactsByParameter(nameRequest, surnameRequest, genderRequest));
+    } else {
+      return ResponseEntity.ok(contactRepository.getAllContacts());
+    }
+  }
+
+  public ResponseEntity<Contact> getContactByPin(Integer pin) {
+    return ResponseEntity.ok(contactRepository.getContactByPin(pin));
+  }
+
+  public ResponseEntity<String> createContactsUsingBody(List<Contact> contactsRequest) {
+    for (Contact contact : contactsRequest) {
+      contactRepository.contactCreation(
+          contact.getPin(),
+          contact.getName(),
+          contact.getSurname(),
+          contact.getGender(),
+          contact.getPhones(),
+          contact.getEmails());
+    }
+    return ResponseEntity.ok("Contacts created successfully.");
+  }
+
+  public ResponseEntity<String> createContactUsingUrlParams(
+      Integer pin,
+      String name,
+      String surname,
+      Gender gender,
+      ContactPhones phones,
+      ContactEmails emails) {
+    contactRepository.contactCreation(pin, name, surname, gender, phones, emails);
+    return ResponseEntity.ok("Contact created successfully.");
+  }
+
+  public ResponseEntity<String> deleteContactByPin(Integer pin) {
+    String returnMsg = contactRepository.deleteContactByPin(pin);
+    return ResponseEntity.ok(returnMsg);
+  }
+
+  public ResponseEntity<String> updateContact(Contact updateRequest) {
+    if (updateRequest.getPin() == null) {
+      return ResponseEntity.ofNullable("PIN is mandatory.");
+    }
+    Contact currentContact = contactRepository.getContactByPin(updateRequest.getPin());
+    Contact updatedContact = updateContactWithNewValues(currentContact, updateRequest);
+    contactRepository.updateContactDetails(updatedContact, updateRequest);
+    return ResponseEntity.ok("Contact updated successfully!");
+  }
+
+  public ResponseEntity<String> deleteEmail(Integer pin, String email) {
+    contactRepository.deleteEmail(pin, email);
+    return ResponseEntity.ok("Email deleted successfully.");
+  }
+
+  public ResponseEntity<String> deletePhone(Integer pin, String phone) {
+    contactRepository.deletePhone(pin, phone);
+    return ResponseEntity.ok("Phone deleted successfully.");
   }
 }

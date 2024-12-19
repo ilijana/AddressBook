@@ -43,7 +43,7 @@ public class ContactController {
       })
   @GetMapping("/contacts/findContact/{pin}")
   public ResponseEntity<Contact> getContactByPin(@PathVariable Integer pin) {
-    return ResponseEntity.ok(contactRepository.getContactByPin(pin));
+    return contactService.getContactByPin(pin);
   }
 
   @Operation(
@@ -62,12 +62,7 @@ public class ContactController {
       @RequestParam(value = "surname", required = false) String surnameRequest,
       @RequestParam(value = "gender", required = false) Gender genderRequest) {
 
-    if (contactService.checkIfRequestParamIsSet(nameRequest, surnameRequest, genderRequest)) {
-      return ResponseEntity.ok(
-          contactRepository.searchContactsByParameter(nameRequest, surnameRequest, genderRequest));
-    } else {
-      return ResponseEntity.ok(contactRepository.getAllContacts());
-    }
+    return contactService.searchContacts(nameRequest, surnameRequest, genderRequest);
   }
 
   @Operation(
@@ -83,17 +78,8 @@ public class ContactController {
   @PostMapping("/contacts/createContactFromJson")
   public ResponseEntity<String> createContactsUsingBody(
       @RequestBody List<@Valid Contact> contactsRequest) {
-    for (Contact contact : contactsRequest) {
-      contactRepository.contactCreation(
-          contact.getPin(),
-          contact.getName(),
-          contact.getSurname(),
-          contact.getGender(),
-          contact.getPhones(),
-          contact.getEmails());
-    }
 
-    return ResponseEntity.ok("Contacts created successfully.");
+    return contactService.createContactsUsingBody(contactsRequest);
   }
 
   @Operation(
@@ -114,9 +100,7 @@ public class ContactController {
       @RequestParam(value = "phone", required = false) ContactPhones phones,
       @RequestParam(value = "email", required = false) ContactEmails emails) {
 
-    contactRepository.contactCreation(pin, name, surname, gender, phones, emails);
-
-    return ResponseEntity.ok("Contact created successfully.");
+    return contactService.createContactUsingUrlParams(pin, name, surname, gender, phones, emails);
   }
 
   @Operation(
@@ -129,9 +113,7 @@ public class ContactController {
       })
   @DeleteMapping("/contacts/{pin}")
   public ResponseEntity<String> deleteContactByPin(@PathVariable Integer pin) {
-    String returnMsg = contactRepository.deleteContactByPin(pin);
-
-    return ResponseEntity.ok(returnMsg);
+    return contactService.deleteContactByPin(pin);
   }
 
   @Operation(
@@ -147,13 +129,7 @@ public class ContactController {
       })
   @PutMapping("/contacts/updateContactAttributes")
   public ResponseEntity<String> updateContact(@RequestBody Contact updateRequest) {
-    if (updateRequest.getPin() == null) {
-      return ResponseEntity.ofNullable("PIN is mandatory.");
-    }
-    Contact currentContact = contactRepository.getContactByPin(updateRequest.getPin());
-    Contact updatedContact = contactService.updateContact(currentContact, updateRequest);
-    contactRepository.updateContactDetails(updatedContact, updateRequest);
-    return ResponseEntity.ok("Contact updated successfully!");
+    return contactService.updateContact(updateRequest);
   }
 
   @Operation(
@@ -187,8 +163,7 @@ public class ContactController {
       })
   @DeleteMapping("/contacts/deleteEmail")
   public ResponseEntity<String> deleteEmail(@RequestParam Integer pin, @RequestParam String email) {
-    contactRepository.deleteEmail(pin, email);
-    return ResponseEntity.ok("Email deleted successfully.");
+    return contactService.deleteEmail(pin, email);
   }
 
   @Operation(
@@ -201,7 +176,6 @@ public class ContactController {
       })
   @DeleteMapping("/contacts/deletePhone")
   public ResponseEntity<String> deletePhone(@RequestParam Integer pin, @RequestParam String phone) {
-    contactRepository.deletePhone(pin, phone);
-    return ResponseEntity.ok("Phone deleted successfully.");
+    return contactService.deletePhone(pin, phone);
   }
 }

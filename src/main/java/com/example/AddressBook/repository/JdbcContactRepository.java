@@ -22,7 +22,6 @@ public class JdbcContactRepository implements ContactRepository {
 
   @Autowired private JdbcTemplate jdbcTemplate;
 
-  // Search for all contacts, each contact is printed in one row
   public List<Contact> getAllContacts() {
     String sql =
         "SELECT "
@@ -39,7 +38,6 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.query(sql, contractMapping);
   }
 
-  // Search by pin, print contact in one row
   public Contact getContactByPin(Integer pin) {
     String sql =
         "SELECT "
@@ -55,7 +53,6 @@ public class JdbcContactRepository implements ContactRepository {
     return jdbcTemplate.queryForObject(sql, contractMapping, pin);
   }
 
-  // Search contact by parameters name, surname and gender. Using multiple parameters is allowed.
   public List<Contact> searchContactsByParameter(
       String searchName, String searchSurname, Gender searchGender) {
     String sqlMultipleSearch =
