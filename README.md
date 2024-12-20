@@ -75,7 +75,7 @@ The connection details for creating a new server in pgAdmin are provided in the 
 | **PSQL Command**     | PGPASSWORD=p8yzRV9KYjJyMxzo8MiHYgMt17mcWoqC psql -h dpg-ctfc80jgbbvc73dd2bmg-a.frankfurt-postgres.render.com -U address_book_hug2_user address_book_hug2 | 
 
 
-## Starting the application from IDE
+## Starting the application from command line
 1. Clone the repository:
     > git clone https://github.com/ilijana/AddressBook.git
 2. The database connection details are available in the application.properties file of the AddressBook project. These details should correspond to the information provided in the table above.
