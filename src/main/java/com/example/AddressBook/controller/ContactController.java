@@ -141,7 +141,7 @@ public class ContactController {
   public ResponseEntity<String> updateContactAttribute(
       @RequestParam("pin") Integer pin,
       @RequestParam("attribute")
-          @Pattern(regexp = "name|surname|gender|emails|phones", message = "Invalid attribute type")
+          @Pattern(regexp = "name|surname|gender|email|phone", message = "Invalid attribute type")
           String attribute,
       @RequestParam(value = "oldValue", required = false) String oldValue,
       @RequestParam("newValue") String newValue) {

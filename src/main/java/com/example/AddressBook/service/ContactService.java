@@ -54,10 +54,10 @@ public class ContactService {
     if (existingContact == null) {
       return ResponseEntity.status(404).body("Contact with pin " + pin + " not found.");
     }
-    if (attribute.equals("phones") && !isValidPhoneNumber(newValue)) {
+    if (attribute.equals("phone") && !isValidPhoneNumber(newValue)) {
       return ResponseEntity.status(400).body("Provided phone number is not valid");
     }
-    if (attribute.equals("emails") && !isValidEmail(newValue)) {
+    if (attribute.equals("email") && !isValidEmail(newValue)) {
       return ResponseEntity.status(400).body("Provided email number is not valid");
     }
     contactRepository.updateContactAttribute(pin, attribute, newValue, oldValue);

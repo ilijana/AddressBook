@@ -2,23 +2,55 @@
 
 This is a Java-based address book application that allows users to manage contact information such as name, surname, gender, phone numbers, and email addresses.
 
-The application is built with **Java 21**, **Spring Boot 3.4.0**, and **JDBC Template** for database interaction. It uses a **PostgreSQL** database to store contact data and provides a **Swagger UI** for API documentation.
+The application is built with **Java 21**, **Spring Boot 3.4.0**, and **JDBC protocol** for database interaction. It uses a **PostgreSQL** database to store contact data and provides a **Swagger UI** for API documentation.
 
 ## Features
 
-**REST API** to manage contacts:
+**Table 1** REST API to manage contacts
 
-| **REST API** | **Path**                          | **Description**                                                                                   |
-|--------------|-----------------------------------|---------------------------------------------------------------------------------------------------|
-| **GET**      | /contacts/findContact/{pin}       | Find a contact by PIN (Personal Identification Number).                                           |
-| **GET**      | /contacts/findContacts            | Retrieves all contacts, with the option to filter by name, surname, or gender.                    |
-| **POST**     | /contacts/createContactFromJson   | Creates a new contact using the data provided in the JSON body.                                   |
-| **POST**     | /contacts/createContact           | Creates a new contact using the data provided in the URL.                                         |
-| **DELETE**   | /contacts/{pin}                   | Deletes contact by PIN (Personal Identification Number).                                          |
-| **PUT**      | /contacts/updateContactAttributes | Update a specific contact attribute(single or multiple) using the data provided in the JSON body. | 
-| **PUT**      | /contacts/updateContactAttribute  | Updating contact by providing attribute name and a new value for it.                              |
-| **DELETE**   | /contacts/deleteEmail             | Delete the email associated with a specific contact.                                              |
-| **DELETE**   | /contacts/deletePhone             | Delete the phone number associated with a specific contact.                                       |
+|   | **REST API** | **Path**                          | **Description**                                                                                   |
+|---|--------------|-----------------------------------|---------------------------------------------------------------------------------------------------|
+| 0 | **GET**      | /contacts/findContact/{pin}       | Find a contact by PIN (Personal Identification Number).                                           |
+| 1 | **GET**      | /contacts/findContacts            | Retrieves all contacts, with the option to filter by name, surname, or gender.                    |
+| 2 | **POST**     | /contacts/createContactFromJson   | Creates a new contact using the data provided in the JSON body.                                   |
+| 3 | **POST**     | /contacts/createContact           | Creates a new contact using the data provided in the URL.                                         |
+| 4 | **DELETE**   | /contacts/{pin}                   | Deletes contact by PIN (Personal Identification Number).                                          |
+| 5 | **PUT**      | /contacts/updateContactAttributes | Update a specific contact attribute(single or multiple) using the data provided in the JSON body. | 
+| 6 | **PUT**      | /contacts/updateContactAttribute  | Updating contact by providing attribute name and a new value for it.                              |
+| 7 | **DELETE**   | /contacts/deleteEmail             | Delete the email associated with a specific contact.                                              |
+| 8 | **DELETE**   | /contacts/deletePhone             | Delete the phone number associated with a specific contact.                                       |
+
+**Table 2** Examples
+
+| **Row in Table 1** | **Example**                                                                                                                                        | **Input**                                                                                                  |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| 0                  | http://localhost:8080/api/contacts/findContact/1000                                                                                                | @PathVariable pin                                                                                          |
+| 1                  | http://localhost:8080/api/contacts/findContacts                                                                                                    | **Optional** @PathVariable name, surname or gender                                                         |
+| 1                  | http://localhost:8080/api/contacts/findContacts?name=Ivan&gender=MALE                                                                              | **Optional** @PathVariable name, surname or gender                                                         |
+| 2                  | http://localhost:8080/api/contacts/createContactFromJson                                                                                           | @RequestBody List of contacts in JSON format                                                               |
+| 3                  | http://localhost:8080/api/contacts/createContact?pin=2030&name=Tanja&surname=Marić&email=tanja.maric@gmail.com                                     | @PathVariable **Mandatory** pin, name and surname **Optional** gender, email and phone                     |
+| 4                  | http://localhost:8080/api/contacts/1234567891                                                                                                      | @PathVariable pin                                                                                          |
+| 5                  | http://localhost:8080/api/contacts/updateContactAttributes                                                                                         | @RequestBody one contact in JSON format - PIN is mandatory for update, rest of the attributes are optional |
+| 6                  | http://localhost:8080/api/contacts/updateContactAttribute?pin=2029&attribute=email&oldValue=leo.titlic@gmail.com&newValue=leonard.titlic@gmail.com | @PathVariable **Mandatory** pin, attribute and newValue **Optional** oldValue                              |
+| 7                  | http://localhost:8080/api/contacts/deleteEmail?pin=2023&email=leo.bandic@gmail.com                                                                 | @PathVariable pin and email                                                                                |
+| 8                  | http://localhost:8080/api/contacts/deletePhone?pin=2023&phone=0997899621                                                                           | @PathVariable pin and phone                                                                                |
+
+***JSON body***
+```json
+   {
+      "pin": 0,
+      "name": "string",
+      "surname": "string",
+      "gender": "MALE",
+      "emails": [
+         "string"
+      ],
+      "phones": [
+         "string"
+      ]
+   }
+```
+
 
 ## Prerequisites
 
@@ -33,13 +65,15 @@ The database is hosted on Render: https://dashboard.render.com/.
 To view the database content and table structure, you can connect to the database using pgAdmin.
 The connection details for creating a new server in pgAdmin are provided in the table below:
 
-| **Parameter**        | **Value**                                                |
-|----------------------|----------------------------------------------------------|
-| **hostname/address** | dpg-ctfc80jgbbvc73dd2bmg-a.frankfurt-postgres.render.com |
-| **port**             | 5432                                                     |
-| **Database**         | address_book_hug2                                        |
-| **Username**         | address_book_hug2_user                                   |
-| **Password**         | p8yzRV9KYjJyMxzo8MiHYgMt17mcWoqC                         |
+| **Parameter**        | **Value**                                                                                                                                                |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **hostname/address** | dpg-ctfc80jgbbvc73dd2bmg-a.frankfurt-postgres.render.com                                                                                                 |
+| **port**             | 5432                                                                                                                                                     |
+| **Database**         | address_book_hug2                                                                                                                                        |
+| **Username**         | address_book_hug2_user                                                                                                                                   |
+| **Password**         | p8yzRV9KYjJyMxzo8MiHYgMt17mcWoqC                                                                                                                         |
+| **PSQL Command**     | PGPASSWORD=p8yzRV9KYjJyMxzo8MiHYgMt17mcWoqC psql -h dpg-ctfc80jgbbvc73dd2bmg-a.frankfurt-postgres.render.com -U address_book_hug2_user address_book_hug2 | 
+
 
 ## Starting the application from IDE
 1. Clone the repository:

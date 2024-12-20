@@ -198,7 +198,7 @@ public class JdbcContactRepository implements ContactRepository {
   @Transactional(rollbackFor = SQLException.class)
   public void updateAttribute(Integer pin, String attribute, String newValue, String oldValue) {
     switch (attribute) {
-      case "emails" -> {
+      case "email" -> {
         if (oldValue != null) {
           String findEmailQuery = "SELECT email_id FROM emails WHERE email = ? AND pin = ?";
           Integer emailId =
@@ -208,7 +208,7 @@ public class JdbcContactRepository implements ContactRepository {
           addEmail(pin, newValue);
         }
       }
-      case "phones" -> {
+      case "phone" -> {
         if (oldValue != null) {
           String findPhoneQuery = "SELECT phone_id FROM phones WHERE phone = ? AND pin = ?";
           Integer phoneId =
